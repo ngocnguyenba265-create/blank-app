@@ -32,3 +32,13 @@ jobs:
       run: |
         conda install pytest
         pytest
+name: base
+channels:
+  - defaults
+  - conda-forge
+dependencies:
+  - python=3.10
+  - streamlit
+  - pandas
+  - numpy
+  # Thêm các thư viện khác mà bạn cần
