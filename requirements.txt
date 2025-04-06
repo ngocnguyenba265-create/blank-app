@@ -1,1 +1,86 @@
-streamlit
+import pandas as pd
+import numpy as np
+from datetime import datetime, timedelta
+
+def calculate_investment(initial, monthly, years, annual_return, volatility=0):
+    """
+    Tính toán kết quả đầu tư dựa trên các tham số đầu vào
+    
+    Parameters:
+    -----------
+    initial : float
+        Số tiền đầu tư ban đầu
+    monthly : float
+        Số tiền đầu tư hàng tháng
+    years : int
+        Số năm đầu tư
+    annual_return : float
+        Lợi nhuận kỳ vọng hàng năm (%)
+    volatility : float, optional
+        Độ biến động thị trường (%)
+        
+    Returns:
+    --------
+    pandas.DataFrame
+        DataFrame chứa kết quả đầu tư theo thời gian
+    """
+    months = years * 12
+    monthly_return = (1 + annual_return/100) ** (1/12) - 1
+    
+    # Khởi tạo mảng kết quả
+    balance = np.zeros(months + 1)
+    investment = np.zeros(months + 1)
+    dates = [datetime.now() + timedelta(days=30*i) for i in range(months + 1)]
+    
+    # Giá trị ban đầu
+    balance[0] = initial
+    investment[0] = initial
+    
+    # Mô phỏng theo từng tháng
+    for i in range(1, months + 1):
+        # Thêm khoản đóng góp hàng tháng
+        investment[i] = investment[i-1] + monthly
+        
+        # Tính lợi nhuận với biến động (nếu có)
+        if volatility > 0:
+            # Tạo biến động ngẫu nhiên theo phân phối chuẩn
+            random_return = np.random.normal(monthly_return, volatility/100/np.sqrt(12))
+            balance[i] = balance[i-1] * (1 + random_return) + monthly
+        else:
+            balance[i] = balance[i-1] * (1 + monthly_return) + monthly
+    
+    return pd.DataFrame({
+        'Thời gian': dates,
+        'Số tiền đầu tư': investment,
+        'Giá trị tài sản': balance
+    })
+
+def generate_multiple_scenarios(initial, monthly, years, annual_return, volatility, num_scenarios=10):
+    """
+    Tạo nhiều kịch bản đầu tư khác nhau
+    
+    Parameters:
+    -----------
+    initial : float
+        Số tiền đầu tư ban đầu
+    monthly : float
+        Số tiền đầu tư hàng tháng
+    years : int
+        Số năm đầu tư
+    annual_return : float
+        Lợi nhuận kỳ vọng hàng năm (%)
+    volatility : float
+        Độ biến động thị trường (%)
+    num_scenarios : int, optional
+        Số lượng kịch bản muốn tạo
+        
+    Returns:
+    --------
+    list
+        Danh sách các DataFrame chứa kết quả của từng kịch bản
+    """
+    scenarios = []
+    for _ in range(num_scenarios):
+        scenario = calculate_investment(initial, monthly, years, annual_return, volatility)
+        scenarios.append(scenario)
+    return scenarios
